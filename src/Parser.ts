@@ -1,4 +1,4 @@
-import { comment, blockComment, shoppingList as shoppingListRegex, tokens } from "./tokens";
+import { comment, blockComment, shoppingList as shoppingListRegex, tokenRegexes } from "./tokens";
 import { Ingredient, Cookware, Step, Metadata, Item, ShoppingList } from "./cooklang";
 
 /**
@@ -77,32 +77,45 @@ export default class Parser {
             const step: Step = [];
 
             let pos = 0;
-            // Reset regex lastIndex for each line to start fresh
-            tokens.lastIndex = 0;
-            let match: RegExpExecArray | null;
-            // Use RegExp.exec in a loop instead of String.matchAll so that
-            // Babel's named-capturing-groups runtime polyfill attaches the
-            // `groups` property to the returned match objects.
-            while ((match = tokens.exec(line)) !== null) {
-                // `groups` may be undefined if the runtime still does not
-                // support named groups.  Fall back to an empty object to avoid
-                // crashes; downstream logic already checks for missing groups.
+            while (pos < line.length) {
+                let bestMatch: RegExpExecArray | null = null;
+                let bestRegex: RegExp | null = null;
+
+                for (const regex of tokenRegexes) {
+                    regex.lastIndex = 0; // search from beginning of slice
+                    const slice = line.slice(pos);
+                    const m = regex.exec(slice);
+                    if (m) {
+                        const absIdx = pos + (m.index || 0);
+                        if (bestMatch === null || absIdx < ((bestMatch as any).absIdx || 0)) {
+                            bestMatch = m;
+                            (bestMatch as any).absIdx = absIdx;
+                            bestRegex = regex;
+                        }
+                    }
+                }
+
+                if (!bestMatch) break; // no further token found
+
+                const match = bestMatch;
+                const matchIndex: number = (match as any).absIdx;
                 const groups = (match as any).groups as Record<string, string> | undefined;
-                if (!groups) continue;
+
+                // text before token
+                if (pos < matchIndex) {
+                    step.push({ type: "text", value: line.substring(pos, matchIndex) });
+                }
+
+                if (!groups) {
+                    pos = matchIndex + match[0].length;
+                    continue;
+                }
 
                 // metadata
                 if (groups.key && groups.value) {
                     metadata[groups.key.trim()] = groups.value.trim();
-
+                    // Skip rest of this line when metadata encountered
                     continue stepLoop;
-                }
-
-                // text
-                if (pos < (match.index || 0)) {
-                    step.push({
-                        type: "text",
-                        value: line.substring(pos, match.index),
-                    });
                 }
 
                 // single word ingredient
@@ -174,16 +187,7 @@ export default class Parser {
                     });
                 }
 
-                pos = (match.index || 0) + match[0].length;
-            }
-
-            // If the entire line hasn't been parsed yet
-            if (pos < line.length) {
-                // Add the rest as a text item
-                step.push({
-                    type: "text",
-                    value: line.substring(pos),
-                });
+                pos = matchIndex + match[0].length;
             }
 
             if (step.length > 0) {

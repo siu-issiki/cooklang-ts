@@ -19,3 +19,16 @@ export const tokens = new RegExp(
         .join("|"),
     "gu"
 );
+
+// Array of the individual token regexes, preserving Babel's _wrapRegExp wrappers so
+// that named capture groups are available at runtime even on engines (e.g., Hermes)
+// that do not natively support them. Do NOT add the global flag here – we rely on
+// local exec calls and resetting lastIndex explicitly in Parser.
+export const tokenRegexes = [
+    metadata,
+    multiwordIngredient,
+    singleWordIngredient,
+    multiwordCookware,
+    singleWordCookware,
+    timer,
+];
