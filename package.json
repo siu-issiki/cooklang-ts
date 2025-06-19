@@ -1,12 +1,10 @@
 {
-  "name": "@cooklang/cooklang-ts",
-  "version": "1.2.7",
-  "description": "Cooklang-TS is a TypeScript library for parsing and manipulating Cooklang recipes.",
+  "name": "@cooklang/cooklang-ts-rn",
+  "version": "1.2.7-rn.1",
+  "description": "React Native compatible Cooklang-TS library for parsing and manipulating Cooklang recipes.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
@@ -16,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cooklang/cooklang-ts.git"
+    "url": "git+https://github.com/siu-issiki/cooklang-ts.git"
   },
   "keywords": [
     "cooklang",
@@ -24,7 +22,9 @@
     "typescript",
     "cooking-recipes",
     "cooking",
-    "markup"
+    "markup",
+    "react-native",
+    "mobile"
   ],
   "author": "ThatTSGuy",
   "license": "MIT",
