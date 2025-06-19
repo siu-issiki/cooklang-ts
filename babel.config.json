@@ -1,3 +1,9 @@
 {
-  "plugins": ["@babel/plugin-transform-unicode-property-regex"]
+  "plugins": [
+    "@babel/plugin-transform-unicode-property-regex",
+    [
+      "@babel/plugin-transform-named-capturing-groups-regex",
+      { "runtime": true }
+    ]
+  ]
 }
