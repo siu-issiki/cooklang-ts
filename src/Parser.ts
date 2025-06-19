@@ -1,5 +1,5 @@
-import { comment, blockComment, shoppingList as shoppingListRegex, tokens } from './tokens';
-import { Ingredient, Cookware, Step, Metadata, Item, ShoppingList } from './cooklang';
+import { comment, blockComment, shoppingList as shoppingListRegex, tokens } from "./tokens";
+import { Ingredient, Cookware, Step, Metadata, Item, ShoppingList } from "./cooklang";
 
 /**
  * @property defaultCookwareAmount The default value to pass if there is no cookware amount. By default the amount is 1
@@ -25,7 +25,7 @@ export default class Parser {
     defaultCookwareAmount: string | number;
     defaultIngredientAmount: string | number;
     includeStepNumber: boolean;
-    defaultUnits = '';
+    defaultUnits = "";
 
     /**
      * Creates a new parser with the supplied options
@@ -34,7 +34,7 @@ export default class Parser {
      */
     constructor(options?: ParserOptions) {
         this.defaultCookwareAmount = options?.defaultCookwareAmount ?? 1;
-        this.defaultIngredientAmount = options?.defaultIngredientAmount ?? 'some';
+        this.defaultIngredientAmount = options?.defaultIngredientAmount ?? "some";
         this.includeStepNumber = options?.includeStepNumber ?? false;
     }
 
@@ -54,16 +54,14 @@ export default class Parser {
         const shoppingList: ShoppingList = {};
 
         // Comments
-        source = source.replace(comment, '').replace(blockComment, ' ');
+        source = source.replace(comment, "").replace(blockComment, " ");
 
         // Parse shopping lists
         for (let match of source.matchAll(shoppingListRegex)) {
             const groups = match.groups;
             if (!groups) continue;
 
-            shoppingList[groups.name] = parseShoppingListCategory(
-                groups.items || ''
-            );
+            shoppingList[groups.name] = parseShoppingListCategory(groups.items || "");
 
             // Remove it from the source
             source = source.substring(0, match.index || 0);
@@ -79,8 +77,17 @@ export default class Parser {
             const step: Step = [];
 
             let pos = 0;
-            for (let match of line.matchAll(tokens)) {
-                const groups = match.groups;
+            // Reset regex lastIndex for each line to start fresh
+            tokens.lastIndex = 0;
+            let match: RegExpExecArray | null;
+            // Use RegExp.exec in a loop instead of String.matchAll so that
+            // Babel's named-capturing-groups runtime polyfill attaches the
+            // `groups` property to the returned match objects.
+            while ((match = tokens.exec(line)) !== null) {
+                // `groups` may be undefined if the runtime still does not
+                // support named groups.  Fall back to an empty object to avoid
+                // crashes; downstream logic already checks for missing groups.
+                const groups = (match as any).groups as Record<string, string> | undefined;
                 if (!groups) continue;
 
                 // metadata
@@ -93,7 +100,7 @@ export default class Parser {
                 // text
                 if (pos < (match.index || 0)) {
                     step.push({
-                        type: 'text',
+                        type: "text",
                         value: line.substring(pos, match.index),
                     });
                 }
@@ -101,7 +108,7 @@ export default class Parser {
                 // single word ingredient
                 if (groups.sIngredientName) {
                     const ingredient: Ingredient = {
-                        type: 'ingredient',
+                        type: "ingredient",
                         name: groups.sIngredientName,
                         quantity: this.defaultIngredientAmount,
                         units: this.defaultUnits,
@@ -116,11 +123,9 @@ export default class Parser {
                 // multiword ingredient
                 if (groups.mIngredientName) {
                     const ingredient: Ingredient = {
-                        type: 'ingredient',
+                        type: "ingredient",
                         name: groups.mIngredientName,
-                        quantity:
-                            parseQuantity(groups.mIngredientQuantity) ??
-                            this.defaultIngredientAmount,
+                        quantity: parseQuantity(groups.mIngredientQuantity) ?? this.defaultIngredientAmount,
                         units: parseUnits(groups.mIngredientUnits) ?? this.defaultUnits,
                         ...(groups.mIngredientPreparation ? { preparation: groups.mIngredientPreparation } : null),
                     };
@@ -134,7 +139,7 @@ export default class Parser {
                 // single word cookware
                 if (groups.sCookwareName) {
                     const cookware: Cookware = {
-                        type: 'cookware',
+                        type: "cookware",
                         name: groups.sCookwareName,
                         quantity: this.defaultCookwareAmount,
                     };
@@ -148,11 +153,9 @@ export default class Parser {
                 // multiword cookware
                 if (groups.mCookwareName) {
                     const cookware: Cookware = {
-                        type: 'cookware',
+                        type: "cookware",
                         name: groups.mCookwareName,
-                        quantity:
-                            parseQuantity(groups.mCookwareQuantity) ??
-                            this.defaultCookwareAmount,
+                        quantity: parseQuantity(groups.mCookwareQuantity) ?? this.defaultCookwareAmount,
                     };
 
                     if (this.includeStepNumber) cookware.step = stepNumber;
@@ -164,7 +167,7 @@ export default class Parser {
                 // timer
                 if (groups.timerQuantity) {
                     step.push({
-                        type: 'timer',
+                        type: "timer",
                         name: groups.timerName,
                         quantity: parseQuantity(groups.timerQuantity) ?? 0,
                         units: parseUnits(groups.timerUnits) ?? this.defaultUnits,
@@ -178,7 +181,7 @@ export default class Parser {
             if (pos < line.length) {
                 // Add the rest as a text item
                 step.push({
-                    type: 'text',
+                    type: "text",
                     value: line.substring(pos),
                 });
             }
@@ -194,20 +197,21 @@ export default class Parser {
 }
 
 function parseQuantity(quantity?: string): string | number | undefined {
-    if (!quantity || quantity.trim() === '') {
+    if (!quantity || quantity.trim() === "") {
         return undefined;
     }
 
     quantity = quantity.trim();
 
-    const [left, right] = quantity.split('/');
+    const [left, right] = quantity.split("/");
 
     const [numLeft, numRight] = [Number(left), Number(right)];
 
     if (right && isNaN(numRight)) return quantity;
 
     if (!isNaN(numLeft) && !numRight) return numLeft;
-    else if (!isNaN(numLeft) && !isNaN(numRight) && !(left.startsWith('0') || right.startsWith('0'))) return numLeft / numRight;
+    else if (!isNaN(numLeft) && !isNaN(numRight) && !(left.startsWith("0") || right.startsWith("0")))
+        return numLeft / numRight;
 
     return quantity.trim();
 }
@@ -223,17 +227,17 @@ function parseUnits(units?: string): string | undefined {
 function parseShoppingListCategory(items: string): Array<Item> {
     const list = [];
 
-    for (let item of items.split('\n')) {
+    for (let item of items.split("\n")) {
         item = item.trim();
 
-        if (item == '') continue;
+        if (item == "") continue;
 
-        const [name, synonym] = item.split('|');
+        const [name, synonym] = item.split("|");
 
         list.push({
             name: name.trim(),
-            synonym: synonym?.trim() || '',
-        })
+            synonym: synonym?.trim() || "",
+        });
     }
 
     return list;
