@@ -2,10 +2,10 @@ const metadata = /^>>\s*(?<key>.+?):\s*(?<value>.+)/;
 
 const multiwordIngredient =
     /@(?<mIngredientName>[^@#~[]+?)\{(?<mIngredientQuantity>[^]*?)(?:%(?<mIngredientUnits>[^}]+?))?\}(\((?<mIngredientPreparation>[^]*?)\))?/;
-const singleWordIngredient = /@(?<sIngredientName>[^\s\t\p{Zs}\p{P}]+)/;
+const singleWordIngredient = /@(?<sIngredientName>[^\s\t\p{Zs}\p{P}]+)/u;
 
 const multiwordCookware = /#(?<mCookwareName>[^@#~[]+?)\{(?<mCookwareQuantity>.*?)\}/;
-const singleWordCookware = /#(?<sCookwareName>[^\s\t\p{Zs}\p{P}]+)/;
+const singleWordCookware = /#(?<sCookwareName>[^\s\t\p{Zs}\p{P}]+)/u;
 
 const timer = /~(?<timerName>.*?)(?:\{(?<timerQuantity>.*?)(?:%(?<timerUnits>.+?))?\})/;
 
