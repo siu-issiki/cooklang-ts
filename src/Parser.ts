@@ -95,7 +95,13 @@ export default class Parser {
                     }
                 }
 
-                if (!bestMatch) break; // no further token found
+                if (!bestMatch) {
+                    // no further token found, but check if there's remaining text
+                    if (pos < line.length) {
+                        step.push({ type: "text", value: line.substring(pos) });
+                    }
+                    break;
+                }
 
                 const match = bestMatch;
                 const matchIndex: number = (match as any).absIdx;
